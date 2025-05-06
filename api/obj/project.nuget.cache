@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "n3Ezsh03mTQ=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\etzy\\Desktop\\Ene\\api\\api.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\etzy\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.0\\microsoft.aspnetcore.openapi.9.0.0.nupkg.sha512",
+    "C:\\Users\\etzy\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
