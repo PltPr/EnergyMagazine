@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using api.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controller
@@ -10,16 +11,18 @@ namespace api.Controller
     [ApiController]
     public class EnergyController :ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        public EnergyController(IConfiguration configuration)
+        private readonly IEnergyRepository _energyrepo;
+        public EnergyController(IEnergyRepository energyrepo)
         {
-            _configuration=configuration;
+            _energyrepo=energyrepo;
         }
 
         [HttpGet("AllDayEnergy")]
         public async Task<IActionResult>GetAllDayEnergy()
         {
-            return Ok();
+            var response=await _energyrepo.GetEnergyDataForTodayAsync();
+
+            return Ok(response);
         }
     }
 }

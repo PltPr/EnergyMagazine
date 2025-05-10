@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using api.Interface;
 
 namespace api.Repository
@@ -12,16 +11,36 @@ namespace api.Repository
         private readonly IConfiguration _configuration;
         public EnergyRepository(IConfiguration configuration)
         {
-            _configuration=configuration;
+            _configuration = configuration;
         }
+
         public async Task<string> GetEnergyDataForTodayAsync()
         {
-            string apiKey=_configuration["EntsoE:ApiKey"];
-            if(string.IsNullOrEmpty(apiKey)) throw new Exception("Brak klucza api w konfiguracji");
+        
+            string apiKey = _configuration["EntsoE:ApiKey"];
+            if (string.IsNullOrEmpty(apiKey))
+                throw new Exception("Brak klucza API w konfiguracji");
 
-            string date = DateTime.UtcNow.ToString("yyyyMMdd");
+     
+            string dateFrom = DateTime.UtcNow.ToString("yyyyMMdd") + "0000";
+            string dateTo   = DateTime.UtcNow.ToString("yyyyMMdd") + "2300";
 
-            return null;
+            
+            string url = $"https://web-api.tp.entsoe.eu/api?" +
+                         $"documentType=A44" +
+                         $"&In_Domain=10YPL-AREA-----S" +
+                         $"&Out_Domain=10YPL-AREA-----S" +
+                         $"&periodStart={dateFrom}" +
+                         $"&periodEnd={dateTo}" +
+                         $"&securityToken={apiKey}";
+
+            using var client = new HttpClient();
+            var response = await client.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Błąd podczas pobierania danych: {(int)response.StatusCode}");
+
+            return await response.Content.ReadAsStringAsync();
         }
     }
 }
