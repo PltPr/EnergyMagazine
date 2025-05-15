@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import type { EnergyPricePoint } from '../Models/EnergyPricePoint'
-import { getEnergyPrice } from '../Api/EnergyPriceApi'
+
+import type { EnergyLowestPrice, EnergyPricePoint } from '../Models/EnergyPricePoint'
+
 import {
   LineChart,
   Line,
@@ -8,21 +8,18 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Scatter
 } from 'recharts'
 
-type Props = {}
+interface Props {
+  energyData:EnergyPricePoint[]
+  lowestPrice:EnergyLowestPrice[]
+}
 
-const Chart = (props: Props) => {
-  const [data, setData] = useState<EnergyPricePoint[]>([])
 
-  useEffect(() => {
-    const getData = async () => {
-      const value = await getEnergyPrice()
-      if (value) setData(value)
-    }
-    getData()
-  }, [])
+const Chart = ({ energyData, lowestPrice }: Props) => {
+  
 
   const hourFormatter = new Intl.DateTimeFormat('pl-PL', {
     timeZone: 'Europe/Warsaw',
@@ -37,10 +34,13 @@ const Chart = (props: Props) => {
     minute: '2-digit',
   })
 
+  
+
+
   return (
     <div style={{ width: '100%', height: 400 }}>
       <ResponsiveContainer>
-        <LineChart data={data}>
+        <LineChart data={energyData}>
           <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
           <XAxis
             dataKey="dateTime"
@@ -58,6 +58,8 @@ const Chart = (props: Props) => {
             dataKey="price"
             stroke="#8884d8"
           />
+          
+          
         </LineChart>
       </ResponsiveContainer>
     </div>

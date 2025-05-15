@@ -41,8 +41,9 @@ namespace api.Controller
             .ToDictionary(g=>g.Key.ToString("yyyy-MM-dd"),
             g=>g.OrderBy(x=>x.Price).Take(2).ToList()
             );
+            var result = lowestPrice.SelectMany(k=>k.Value).ToList();
 
-            return Ok(lowestPrice);
+            return Ok(result);
         }
     }
 }
