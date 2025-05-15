@@ -1,9 +1,9 @@
 export type EnergyPricePoint={
-    DateTime:Date,
-    Price:number
+    dateTime:Date,
+    price:number
 }
 
 export type EnergyLowestPrice = {
-    DateTime:Date,
-    Price:number
+    dateTime:Date,
+    price:number
 };

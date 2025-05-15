@@ -9,7 +9,9 @@ import {
   Tooltip,
   CartesianGrid,
   ResponsiveContainer,
-  Scatter
+  Scatter,
+  ReferenceLine,
+  Legend
 } from 'recharts'
 
 interface Props {
@@ -35,7 +37,7 @@ const Chart = ({ energyData, lowestPrice }: Props) => {
   })
 
   
-
+  const referencePrice = 100
 
   return (
     <div style={{ width: '100%', height: 400 }}>
@@ -53,12 +55,32 @@ const Chart = ({ energyData, lowestPrice }: Props) => {
             }
             formatter={(value: number) => [`${value.toFixed(2)} EUR`, 'Price']}
           />
+          
           <Line
             type="linear"
             dataKey="price"
-            stroke="#8884d8"
+            stroke="blue"
           />
-          
+           <Scatter
+            name="Lowest Price"
+            data={lowestPrice}
+            dataKey="price"
+            fill="red"
+          />
+           <ReferenceLine
+            name="Oszacowana cena prądu PGE G11"
+            y={referencePrice}
+            stroke="red"
+            strokeDasharray="3 3"
+            label={{ value: 'Taryfa G11 (PGE)', position: 'right', fill: 'gray' }}
+          />
+          <Legend 
+          payload={[
+            { value: 'Ceny energii', type: 'line', id: 'line-price', color: 'blue' },
+            { value: 'Taryfa G11 (PGE)', type: 'line', id: 'reference-line', color: 'red'},
+          ]} 
+        />
+
           
         </LineChart>
       </ResponsiveContainer>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Chart from '../Components/Chart'
 import type { EnergyLowestPrice, EnergyPricePoint } from '../Models/EnergyPricePoint'
 import { getEnergyPrice, getLowetPrice } from '../Api/EnergyPriceApi'
+import LowestPricesTable from '../Components/LowestPricesTable'
 
 type Props = {}
 
@@ -23,8 +24,19 @@ const MainPage = (props: Props) => {
 
   return (
     <>
+    {lowest && lowest.length >0 ? (
+      <>
     <Chart energyData={data ?? []} lowestPrice={lowest ?? []}/>
+    
+      <LowestPricesTable data={lowest} />
+      </>
+    ) : (
+      <p>Ładowanie danych...</p>
+    )}
+   
     </>
+
+    
   )
 }
 
