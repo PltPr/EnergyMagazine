@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using api.Interface;
+using api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace api.Controller
 {
@@ -12,9 +14,11 @@ namespace api.Controller
     public class EnergyController :ControllerBase
     {
         private readonly IEnergyRepository _energyrepo;
-        public EnergyController(IEnergyRepository energyrepo)
+        private readonly IMemoryCache _cache;
+        public EnergyController(IEnergyRepository energyrepo, IMemoryCache cache)
         {
             _energyrepo=energyrepo;
+            _cache=cache;
         }
 
         [HttpGet("AllDayEnergy")]
@@ -22,7 +26,23 @@ namespace api.Controller
         {
             var response=await _energyrepo.GetEnergyDataForTodayAsync();
 
+            _cache.Set("TodayEnergyData",response, TimeSpan.FromHours(1));
+
             return Ok(response);
+        }
+        [HttpGet("Extremes")]
+        public IActionResult GetExtremes()
+        {
+            if(!_cache.TryGetValue("TodayEnergyData",out List<EnergyPricePoint> cachedData))
+            {
+                return NotFound("No data");
+            }
+            var lowestPrice = cachedData.GroupBy(x=>x.DateTime.Date)
+            .ToDictionary(g=>g.Key.ToString("yyyy-MM-dd"),
+            g=>g.OrderBy(x=>x.Price).Take(2).ToList()
+            );
+
+            return Ok(lowestPrice);
         }
     }
 }
