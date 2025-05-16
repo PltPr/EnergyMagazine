@@ -37,10 +37,10 @@ const Chart = ({ energyData, lowestPrice }: Props) => {
   })
 
   
-  const referencePrice = 100
+  const referencePrice = 117
 
   return (
-    <div style={{ width: '100%', height: 400 }}>
+    <div className='w-100% h-100 mr-10 mt-5  bg-gray-300'>
       <ResponsiveContainer>
         <LineChart data={energyData}>
           <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
@@ -68,7 +68,7 @@ const Chart = ({ energyData, lowestPrice }: Props) => {
             fill="red"
           />
            <ReferenceLine
-            name="Oszacowana cena prądu PGE G11"
+            name="Oszacowana cena czystego prądu PGE G11"
             y={referencePrice}
             stroke="red"
             strokeDasharray="3 3"
@@ -77,7 +77,7 @@ const Chart = ({ energyData, lowestPrice }: Props) => {
           <Legend 
           payload={[
             { value: 'Ceny energii', type: 'line', id: 'line-price', color: 'blue' },
-            { value: 'Taryfa G11 (PGE)', type: 'line', id: 'reference-line', color: 'red'},
+            { value: 'Oszacowana cena "czystego" prądu PGE G11', type: 'line', id: 'reference-line', color: 'red'},
           ]} 
         />
 
