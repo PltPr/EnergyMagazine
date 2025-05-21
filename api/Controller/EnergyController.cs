@@ -9,7 +9,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace api.Controller
 {
-    [Route("api/[controller]")]
+    [Route("api/energy")]
     [ApiController]
     public class EnergyController :ControllerBase
     {
