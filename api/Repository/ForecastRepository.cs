@@ -49,11 +49,47 @@ namespace api.Repository
 
         }
 
-        public async Task<List<ForecastPoint>> GetForecastData()
+        public async Task<List<ForecastPoint>> GetForecastDataArchive(string? startDate=null, string? endDate=null)
         {
-            string startDate = "2023-05-01";
-            string endDate = "2023-05-18";
+            startDate ??= "2023-05-01";
+            endDate ??= "2023-05-01";
+
             string url = $"https://archive-api.open-meteo.com/v1/archive" +
+             $"?latitude=52.23" +
+             $"&longitude=21.01" +
+             $"&start_date={startDate}" +
+             $"&end_date={endDate}" +
+             $"&hourly=temperature_2m,wind_speed_10m,cloudcover,precipitation,relative_humidity_2m,dew_point_2m" +
+             $"&timezone=Europe%2FWarsaw";
+
+
+            try
+            {
+                var response = await _httpClient.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+
+                string json = await response.Content.ReadAsStringAsync();
+
+                var forecastPoints = ForecastParser(json);
+
+                return forecastPoints;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Bład pobieranie danych pogodowych: {ex.Message}");
+                return new List<ForecastPoint>();
+            }
+        }
+
+        public async Task<List<ForecastPoint>> GetForecastDataPredict(string? startDate = null, string? endDate = null)
+        {
+            TimeZoneInfo warsaw = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+            DateTime warsawNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, warsaw);
+            startDate ??= warsawNow.ToString("yyyy-MM-dd");
+
+            endDate ??= warsawNow.AddDays(2).ToString("yyyy-MM-dd");
+
+            string url = $"https://api.open-meteo.com/v1/forecast" +
              $"?latitude=52.23" +
              $"&longitude=21.01" +
              $"&start_date={startDate}" +

@@ -8,7 +8,8 @@ namespace api.Interface
 {
     public interface IForecastRepository
     {
-        Task<List<ForecastPoint>> GetForecastData();
+        Task<List<ForecastPoint>> GetForecastDataArchive(string? startDate=null, string? endDate=null);
+        Task<List<ForecastPoint>> GetForecastDataPredict(string? startDate=null, string? endDate=null);
         List<ForecastPoint> ForecastParser(string json);
     }
 }

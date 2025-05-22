@@ -19,7 +19,7 @@ namespace api.Repository
             _configuration = configuration;
         }
 
-        public async Task<List<EnergyPricePoint>> GetEnergyDataForTodayAsync()
+        public async Task<List<EnergyPricePoint>> GetEnergyDataForTodayAsync(string? startDate=null, string? endDate=null)
         {
 
             string apiKey = _configuration["EntsoE:ApiKey"];
@@ -27,16 +27,16 @@ namespace api.Repository
                 throw new Exception("Brak klucza API w konfiguracji");
 
 
-            string dateFrom = DateTime.UtcNow.ToString("yyyyMMdd") + "0000";
-            string dateTo = DateTime.UtcNow.ToString("yyyyMMdd") + "2300";
+            startDate ??= DateTime.UtcNow.ToString("yyyyMMdd") + "0000";
+            endDate ??= DateTime.UtcNow.ToString("yyyyMMdd") + "2300";
 
 
             string url = $"https://web-api.tp.entsoe.eu/api?" +
                          $"documentType=A44" +
                          $"&In_Domain=10YPL-AREA-----S" +
                          $"&Out_Domain=10YPL-AREA-----S" +
-                         $"&periodStart={dateFrom}" +
-                         $"&periodEnd={dateTo}" +
+                         $"&periodStart={startDate}" +
+                         $"&periodEnd={endDate}" +
                          $"&securityToken={apiKey}";
 
             using var client = new HttpClient();
@@ -52,6 +52,7 @@ namespace api.Repository
 
         public List<EnergyPricePoint> ParseXml(string xml)
         {
+            var warsawTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
             var culture = CultureInfo.InvariantCulture;
             var ns = (XNamespace)"urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:3";
             var doc = XDocument.Parse(xml);
@@ -73,11 +74,13 @@ namespace api.Repository
 
                     if (int.TryParse(posStr,NumberStyles.Any, culture, out int position) && double.TryParse(priceStr,NumberStyles.Any, culture, out double price))
                     {
-                        var utcHour = periodStartUtc.AddHours(position - 1);
+                        var utcHour = DateTime.SpecifyKind(periodStartUtc.AddHours(position - 2), DateTimeKind.Utc);
+                        var localHour = TimeZoneInfo.ConvertTimeFromUtc(utcHour, warsawTimeZone);
+
 
                         result.Add(new EnergyPricePoint
                         {
-                            DateTime = utcHour,
+                            DateTime = localHour,
                             Price = price
                         });
                     }
