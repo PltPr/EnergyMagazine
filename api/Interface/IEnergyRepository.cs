@@ -8,7 +8,7 @@ namespace api.Interface
 {
     public interface IEnergyRepository
     {
-        Task<List<EnergyPricePoint>>GetEnergyDataForTodayAsync();
+        Task<List<EnergyPricePoint>>GetEnergyDataForTodayAsync(string? startDate=null, string? endDate=null);
         public List<EnergyPricePoint> ParseXml(string xml);
     }
 }

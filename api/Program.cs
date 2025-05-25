@@ -11,7 +11,8 @@ builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<IEnergyRepository,EnergyRepository>();
+builder.Services.AddScoped<IEnergyRepository, EnergyRepository>();
+builder.Services.AddHttpClient<IForecastRepository, ForecastRepository>();
 
 builder.Services.AddCors(options =>
 {
