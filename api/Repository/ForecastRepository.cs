@@ -87,7 +87,7 @@ namespace api.Repository
             DateTime warsawNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, warsaw);
             startDate ??= warsawNow.ToString("yyyy-MM-dd");
 
-            endDate ??= warsawNow.AddDays(2).ToString("yyyy-MM-dd");
+            endDate ??= warsawNow.AddDays(1).ToString("yyyy-MM-dd");
 
             string url = $"https://api.open-meteo.com/v1/forecast" +
              $"?latitude=52.23" +

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
@@ -6,14 +6,12 @@ import pandas as pd
 import joblib
 import os
 import numpy as np
-
 from xgboost import XGBRegressor
 from sklearn.model_selection import GridSearchCV
 
 app = FastAPI()
 MODEL_PATH = "model_xgb.pkl"
 
-# Dane wejściowe
 class ForecastPoint(BaseModel):
     date: datetime
     temperature: float
@@ -44,7 +42,6 @@ class ForecastInput(BaseModel):
     season: int
     isWeekend: int
 
-# Dodanie cech czasowych
 def add_time_features(df: pd.DataFrame, date_col: str):
     dt = pd.to_datetime(df[date_col])
     df['dayofweek'] = dt.dt.dayofweek
@@ -63,7 +60,6 @@ def train_model(data: TrainingData):
         energy_df = pd.DataFrame([e.dict() for e in data.energy])
 
         forecast_df = add_time_features(forecast_df, "date")
-
         forecast_df["hour_rounded"] = pd.to_datetime(forecast_df["date"]).dt.floor("H")
         energy_df["hour_rounded"] = pd.to_datetime(energy_df["dateTime"]).dt.floor("H")
 
@@ -72,33 +68,58 @@ def train_model(data: TrainingData):
         if merged.empty:
             raise HTTPException(status_code=400, detail="Brak dopasowanych rekordów co godzinę")
 
+        # Dodaj timestamp jako cechę
+        merged["timestamp"] = pd.to_datetime(merged["hour_rounded"]).view('int64') / 1e9
+
         features = [
             "temperature", "windSpeed", "cloudCover", "precipitation",
             "relativeHumidity", "dewPoint",
-            "dayofweek", "hour_sin", "hour_cos", "season", "isWeekend"
+            "dayofweek", "hour_sin", "hour_cos", "season", "isWeekend",
+            "timestamp"
         ]
 
-        # Upewnij się, że wszystkie kolumny istnieją
         missing = [col for col in features if col not in merged.columns]
         if missing:
             raise HTTPException(status_code=400, detail=f"Brak kolumn: {missing}")
 
         X = merged[features]
-        y = merged["price"]
+        y = merged["price"] + 30  # Dodaj korektę trendu
 
+        weights = np.ones_like(y)
+
+        peak_hours = merged['hour'].isin([6, 7, 8, 17, 18, 19, 20, 21])
+        weights[peak_hours] = 3
+
+        late_peak = merged['hour'].isin([20, 21])
+        weights[late_peak] = 6
+
+        # Sample weights: daj większe dla wartości skrajnych
+        def weight_function(p):
+            if p < 80 or p > 120:
+                return 1
+            elif p < 80 :
+                return 1
+            elif p > 140:
+                return 1
+            else:
+                return 1
+
+        sample_weights = merged["price"].apply(weight_function)
+
+        # Model + GridSearch
         param_grid = {
-            'max_depth': [3, 4, 5],
-            'learning_rate': [0.1, 0.05],
-            'n_estimators': [100, 150],
+            'max_depth': [3, 6],
+            'learning_rate': [0.05, 0.1],
+            'n_estimators': [100, 200],
             'subsample': [0.8, 1],
             'colsample_bytree': [0.8, 1],
-            'min_child_weight': [2, 3],
-            'gamma': [0, 0.05]
+            'min_child_weight': [1, 3],
+            'gamma': [0, 0.1]
         }
 
         model = XGBRegressor(random_state=42, objective='reg:squarederror')
         grid = GridSearchCV(model, param_grid, cv=3, n_jobs=-1, verbose=1, scoring='neg_mean_squared_error')
-        grid.fit(X, y)
+        grid.fit(X, y, sample_weight=sample_weights)
 
         best_model = grid.best_estimator_
         joblib.dump(best_model, MODEL_PATH)
@@ -124,3 +145,32 @@ def predict(input: ForecastInput):
     df = pd.DataFrame([input.dict()])
     pred = model.predict(df)[0]
     return {"predicted_price": round(pred, 2)}
+
+@app.post("/predict_batch")
+async def predict_batch(inputs: List[ForecastPoint] = Body(...)):
+    if not os.path.exists(MODEL_PATH):
+        raise HTTPException(status_code=400, detail="Model nie wytrenowany.")
+
+    model = joblib.load(MODEL_PATH)
+    df = pd.DataFrame([input.dict() for input in inputs])
+    df = add_time_features(df, "date")
+    df["timestamp"] = pd.to_datetime(df["date"]).view('int64') / 1e9
+
+    required_features = [
+        "temperature", "windSpeed", "cloudCover", "precipitation",
+        "relativeHumidity", "dewPoint", "dayofweek", "hour_sin",
+        "hour_cos", "season", "isWeekend","timestamp"
+    ]
+
+    missing = [col for col in required_features if col not in df.columns]
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Brak kolumn: {missing}")
+
+    X = df[required_features]
+    preds = model.predict(X)
+
+    results = [
+        {"date": input.date, "predicted_price": round(float(pred), 2)}
+        for input, pred in zip(inputs, preds)
+    ]
+    return results

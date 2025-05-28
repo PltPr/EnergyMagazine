@@ -9,18 +9,16 @@ import {
   Tooltip,
   CartesianGrid,
   ResponsiveContainer,
-  Scatter,
   ReferenceLine,
   Legend
 } from 'recharts'
 
 interface Props {
   energyData:EnergyPricePoint[]
-  lowestPrice:EnergyLowestPrice[]
 }
 
 
-const Chart = ({ energyData, lowestPrice }: Props) => {
+const Chart = ({ energyData}: Props) => {
   
 
   const hourFormatter = new Intl.DateTimeFormat('pl-PL', {
@@ -60,12 +58,6 @@ const Chart = ({ energyData, lowestPrice }: Props) => {
             type="linear"
             dataKey="price"
             stroke="blue"
-          />
-           <Scatter
-            name="Lowest Price"
-            data={lowestPrice}
-            dataKey="price"
-            fill="red"
           />
            <ReferenceLine
             name="Oszacowana cena czystego prądu PGE G11"

@@ -72,9 +72,9 @@ namespace api.Repository
                     var posStr = point.Element(ns + "position")?.Value;
                     var priceStr = point.Element(ns + "price.amount")?.Value;
 
-                    if (int.TryParse(posStr,NumberStyles.Any, culture, out int position) && double.TryParse(priceStr,NumberStyles.Any, culture, out double price))
+                    if (int.TryParse(posStr,NumberStyles.Any, culture, out int position) && float.TryParse(priceStr,NumberStyles.Any, culture, out float price))
                     {
-                        var utcHour = DateTime.SpecifyKind(periodStartUtc.AddHours(position - 2), DateTimeKind.Utc);
+                        var utcHour = DateTime.SpecifyKind(periodStartUtc.AddHours(position - 3), DateTimeKind.Utc);
                         var localHour = TimeZoneInfo.ConvertTimeFromUtc(utcHour, warsawTimeZone);
 
 

@@ -20,3 +20,12 @@ export const getLowetPrice = async()=>{
         throw err;
     }
 }
+
+export const getPredictedPrice = async()=>{
+    try{
+        const response = await axios.post<EnergyPricePoint[]>("http://localhost:5002/api/predict/EnergyPredict")
+        return response.data
+    }catch(err){
+        throw err;
+    }
+}
